@@ -1,0 +1,346 @@
+title: Usage2ADW
+description: Oracle Cloud Infrastructure Usage and Cost Reports to Autonomous Database with APEX reports
+schemaVersion: 1.0.0
+version: "20210525"
+locale: "en"
+
+groupings:
+
+- title: "General Setting"
+  variables:
+  - ${compartment_ocid}
+
+- title: "Identity Configuration"
+  visible: true
+  variables:
+  - ${option_iam}
+  - ${new_policy_name}
+  - ${new_dynamic_group_name}
+
+- title: "Network Configuration"
+  visible: true
+  variables:
+  - ${option_network}
+  - ${new_network_prefix}
+  - ${new_vcn_cidr}
+  - ${new_subnet_cidr}
+  - ${network_vcn_compartment_id}
+  - ${network_vcn_id}
+  - ${network_subnet_compartment_id}
+  - ${network_subnet_id}
+
+- title: "Autonomous Database Configuration"
+  visible: true
+  variables:
+  - ${db_db_name}
+  - ${db_password}
+  - ${db_license_model}
+  - ${db_is_free_tier}
+
+- title: "Instance Configuration"
+  variables:
+  - ${instance_availability_domain}
+  - ${instance_name}
+  - ${instance_shape}
+  - ${ssh_public_key}
+  - ${extract_from_date}
+  - ${extract_tag_special_key}
+
+variables:
+
+  ###################################################
+  # Main Menu
+  ###################################################
+  compartment_ocid:
+    title: Stack Compartment
+    description: Choose the compartment where all the provisioned resources will be deployed *** Deployment must be at Home Region ***
+    type: oci:identity:compartment:id
+    required: true
+
+  ###################################################
+  # Identity Configuration
+  ###################################################
+  option_iam:
+    title: Identity Options
+    description: IAM Dynamic Group and Policies can be created for you under the root compartment, it required Admin access.
+    visible: true
+    type: enum
+    enum:
+     - New IAM Dynamic Group and Policy will be created
+     - I have already created Dynamic Group and Policy per the documentation
+    default: I have already created Dynamic Group and Policy per the documentation
+    required: true
+
+  new_dynamic_group_name:
+    title: Dynamic Group Name
+    required: true
+    pattern: ^[A-Za-z][A-Za-z0-9-_]+$
+    type: string
+    maxLength: 30
+    default: Usage2ADW_DynamicGroup
+    visible:
+      eq:
+       - ${option_iam}
+       - New IAM Dynamic Group and Policy will be created
+
+  new_policy_name:
+    title: Policy Name
+    required: true
+    pattern: ^[A-Za-z][A-Za-z0-9-_]+$
+    type: string
+    maxLength: 30
+    default: Usage2ADW_Policy
+    visible:
+      eq:
+       - ${option_iam}
+       - New IAM Dynamic Group and Policy will be created
+
+  ###################################################
+  # Network Configuration
+  ###################################################
+  option_network:
+    title: Networking Options
+    description: The Extract Compute Instance can be created inside a new VCN and Subnet, or it can be created inside an existing network.
+    visible: true
+    type: enum
+    enum:
+     - New networking components will be created
+     - Existing networking components will be used
+    default: New networking components will be created
+    required: true
+
+  new_network_prefix:
+    title: Network Prefix Name
+    required: true
+    pattern: ^[A-Za-z][A-Za-z0-9]+$
+    type: string
+    maxLength: 14
+    default: usage2adw
+    visible:
+      eq:
+       - ${option_network}
+       - New networking components will be created
+
+  new_vcn_cidr:
+    title: Virtual Network CIDR
+    description: The CIDR to assign to the new virtual cloud network (VCN) to create for this service.
+    type: string
+    default: 10.0.0.0/16
+    pattern: "^(25[0-5]|2[0-4][0-9]|1[0-9][0-9]|[1-9]?[0-9]).(25[0-5]|2[0-4][0-9]|1[0-9][0-9]|[1-9]?[0-9]).(25[0-5]|2[0-4][0-9]|1[0-9][0-9]|[1-9]?[0-9]).(25[0-5]|2[0-4][0-9]|1[0-9][0-9]|[1-9]?[0-9])\\/(3[0-2]|[1-2]?[0-9])$"
+    required: true
+    visible:
+      eq:
+       - ${option_network}
+       - New networking components will be created
+
+  new_subnet_cidr:
+    title: Application Subnet CIDR
+    description: The CIDR to assign to the new Subnet to create for this service.. This will be created as a public regional subnet.
+    type: string
+    default: 10.0.1.0/24
+    pattern: "^(25[0-5]|2[0-4][0-9]|1[0-9][0-9]|[1-9]?[0-9]).(25[0-5]|2[0-4][0-9]|1[0-9][0-9]|[1-9]?[0-9]).(25[0-5]|2[0-4][0-9]|1[0-9][0-9]|[1-9]?[0-9]).(25[0-5]|2[0-4][0-9]|1[0-9][0-9]|[1-9]?[0-9])\\/(3[0-2]|[1-2]?[0-9])$"
+    required: true
+    visible:
+      eq:
+       - ${option_network}
+       - New networking components will be created
+
+  network_vcn_compartment_id:
+    title: VCN Compartment
+    type: oci:identity:compartment:id
+    default: ${compartment_ocid}
+    required: true
+    visible:
+       eq:
+        - ${option_network}
+        - Existing networking components will be used   
+
+  network_vcn_id:
+    title: VCN
+    type: oci:core:vcn:id
+    dependsOn:
+      compartmentId: ${network_vcn_compartment_id}
+    required: true
+    visible:
+       eq:
+        - ${option_network}
+        - Existing networking components will be used   
+
+  network_subnet_compartment_id:
+    title: Subnet Compartment
+    type: oci:identity:compartment:id
+    default: ${compartment_ocid}
+    required: true
+    visible:
+       eq:
+        - ${option_network}
+        - Existing networking components will be used   
+
+  network_subnet_id:
+    title: Subnet
+    type: oci:core:subnet:id
+    dependsOn:
+      compartmentId: ${network_subnet_compartment_id}
+      vcnId: ${network_vcn_id}
+    required: true
+    visible:
+       eq:
+        - ${option_network}
+        - Existing networking components will be used   
+
+  ###################################################
+  # Database Configuration
+  ###################################################
+  db_db_name:
+    title: Autonomous Database Name
+    description: Choose an Autonomous Database Name
+    required: true
+    pattern: ^[A-Za-z][A-Za-z0-9]+$
+    type: string
+    maxLength: 14
+    visible: true
+
+  db_password:
+    description: Provide database password. it will be used for admin, wallet and application , cannot have the word "usage" in the passowrd, (Must be a minimum 12 characters, contain at least one uppercase letter, one lowercase letter, one number , no special characters allowed).
+    type: password
+    minLength: 12
+    maxLength: 30
+    pattern: ^[A-Za-z][A-Za-z0-9]+$
+    required: true
+  
+  db_license_model:
+    title: Database License
+    description: Choose your database license type.
+    type: enum
+    enum:
+    - LICENSE_INCLUDED
+    - BRING_YOUR_OWN_LICENSE
+    default: BRING_YOUR_OWN_LICENSE
+    required: true
+    visible: true
+
+  db_is_free_tier:
+    title: Use Free Tier
+    description: Use Free Tier ? Free tier allow 20GB which may not enough for yearly usage.
+    type: boolean
+    default: false
+    visible: true
+
+  ###########################
+  # instance
+  ###########################
+  instance_name: 
+    title: Instance Name
+    description: Provide the instance name
+    type: string  
+    minLength: 1
+    maxLength: 12
+    pattern: ^[A-Za-z][A-Za-z0-9]+$
+    default: Usage2AdwVM
+    required: true   
+
+  ssh_public_key:
+    type: oci:core:ssh:publickey
+    title: SSH Public Key
+    description: Use public key to secure your VM, Private key pair will be needed later.
+    required: true
+  
+  instance_shape:
+    title: Compute Shape
+    description: The shape for the usage2adw compute instances (Micro shape is only available in certen availability domains, please check before choosing)
+    type: enum
+    enum:
+    - VM.Standard2.1
+    - VM.Standard.E2.1
+    - VM.Standard.E2.1.Micro
+    default: VM.Standard2.1
+    required: true
+    visible: true
+
+  instance_availability_domain:
+    title: Availability Domain
+    description: The name of the availability domain in which to create compute instances, must be at home region
+    type: oci:identity:availabilitydomain:name
+    required: true
+    dependsOn:
+      compartmentId: ${compartment_ocid}
+
+  extract_from_date:
+    title: Extract usage from date
+    description: Please specify the date to extract from, in format (YYYY-MM)
+    type: string
+    default: "2021-04"
+    pattern: "^(2019|202[0-9])-(0[0-9]|1[0-2])$"
+    required: true
+    visible: true
+
+  extract_tag_special_key:
+    title: Extract Tag Key to special tag column
+    description: Please specify the tag key to load to Tag Special column
+    type: string
+    default: "Oracle-Tags.CreatedBy"
+    required: true
+    visible: true
+
+  ###########################
+  # Connections Variables
+  ###########################
+  tenancy_ocid:
+     title: Tenancy ID
+     description: The Oracle Cloud Identifier (OCID) for your tenancy.
+     type: string
+     required: true
+     visible: false
+  
+  region:
+     title: Region
+     description: The region in which to create all resources.
+     type: oci:identity:region:name
+     required: true
+     visible: false
+
+  user_ocid:
+     title: User ID
+     description: The Oracle Cloud Identifier (OCID) for the user
+     type: string
+     visible: false
+
+  fingerprint:
+     title: Private Key Fingerprint
+     type: string
+     visible: false
+
+  ###########################
+  # Other Variables
+  ###########################
+  image_option:
+    title: Use Marketplace Image
+    type: boolean
+    visible: false
+
+  mp_listing_id:
+    type: string
+    visible: false
+
+  mp_listing_resource_version:
+    type: string
+    visible: false
+
+  mp_subscription_enabled:
+    type: string
+    visible: false
+
+  custom_image_id:
+    type: string
+    visible: false
+
+  mp_listing_resource_id:
+    title: Instance Image OCID
+    type: oci:core:image:id
+    visible: false
+
+  marketplace_source_images:
+    title: Market Place Source Image
+    type: string
+    visible: false
+

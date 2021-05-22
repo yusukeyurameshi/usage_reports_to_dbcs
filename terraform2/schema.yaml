@@ -1,0 +1,124 @@
+title: "Oracle Apex Deployment"
+description: "Configuração do Tomcat em uma VM Instance com ORDS. Apex será configurado em um DBCS pré-existente"
+schemaVersion: 1.0.1
+version: "20200604"
+locale: "en"
+
+groupings:
+  - title: "General Configurations"
+    visible: false
+    variables:
+      - compartment_ocid
+      - tenancy_ocid
+      - region
+      - HostUserName
+      - BootStrapFileDomain
+      - AD
+      - web_srv
+      - ComputeDisplayName
+      - InstanceName
+      - InstanceShape
+      - InstanceOS
+      - InstanceOSVersion
+      - APEX_install_mode
+      - BootStrapFile
+
+  - title: "Specific Configurations"
+    visible: true
+    variables:
+      - subnet_ocid
+      - target_db_admin_pw
+      - target_db_ip
+      - target_db_srv_name
+      - target_db_name
+      - com_port
+      - URL_ORDS_file
+      - URL_tomcat_file
+      - URL_APEX_file
+
+variables:
+  compartment_ocid:
+    type: oci:identity:compartment:id
+    # type: string
+    required: true
+    title: "Compartment"
+    description: "The compartment in which to create compute instance"
+
+  subnet_ocid:
+    type: string
+    required: true
+    title: "Subnet_OCID"
+    description: "OCID da subnet onde será criada a instância."
+
+  target_db_admin_pw:
+    type: string
+    required: true
+    title: "Senha de SYSDBA"
+    description: "Senha de SYSDBA."
+
+  target_db_ip:
+    type: string
+    required: true
+    title: "IP do Banco de dados"
+    description: "IP do Banco de dados."
+
+  target_db_srv_name:
+    type: string
+    required: true
+    title: "Service Name"
+    description: "Serviço de Conexão do Banco."
+
+  target_db_name:
+    type: string
+    required: true
+    title: "Nome do Banco"
+    description: "Se for CDB ou NonCDB use Unique Name, se for PDB use o nome do PDB."
+
+  com_port:
+    type: string
+    required: true
+    title: "Porta"
+    description: "Porta em que o ORDS será configurado."
+
+  URL_ORDS_file:
+    type: string
+    required: true
+    title: "URL ORDS"
+    description: "Caminho para download do arquivo do ORDS."
+
+  URL_tomcat_file:
+    type: string
+    required: true
+    title: "URL Tomcat"
+    description: "Caminho para download do arquivo do Tomcat."
+
+  URL_APEX_file:
+    type: string
+    required: true
+    title: "URL Apex"
+    description: "Caminho para download do arquivo do Apex."
+
+outputGroups:
+  - title: "Apex Deployment details"
+    outputs:
+      - ${url}
+      - ${InstancePrivateIP}
+      - ${InstancePublicIP}
+
+outputs:
+  url:
+    type: link
+    title: Open
+    visible: true
+
+  InstancePrivateIP:
+    type: string
+    title: "Ip Privado"
+    visible: true
+
+  InstancePublicIP:
+    type: string
+    title: "IP Público"
+    visible: true
+
+primaryOutputButton: ${url}
