@@ -2,18 +2,18 @@
 resource "null_resource" "remote-exec_init" {
   depends_on = [oci_core_instance.ORDS-Comp-Instance]
 
-  provisioner "file" {
-    connection {
-      agent       = false
-      timeout     = "10m"
-      host        = data.oci_core_vnic.InstanceVnic.public_ip_address
-      user        = var.HostUserName
-      private_key = file("./keys/Private_key_manual.ssh")
-    }
-
-    source      = "./userdata/files_init/config_init.sh"
-    destination = "~/config_init.sh"
-  }
+  #provisioner "file" {
+  #  connection {
+  #    agent       = false
+  #    timeout     = "10m"
+  #    host        = data.oci_core_vnic.InstanceVnic.public_ip_address
+  #    user        = var.HostUserName
+  #    private_key = file("./keys/Private_key_manual.ssh")
+  #  }
+  #
+  #  source      = "./userdata/files_init/config_init.sh"
+  #  destination = "~/config_init.sh"
+  #}
 
   provisioner "remote-exec" {
     connection {
@@ -26,8 +26,11 @@ resource "null_resource" "remote-exec_init" {
 
     inline = [
       #"unzip files_init.zip",
-      "chmod +x ~/config_init.sh",
-      "sudo ~/config_init.sh",
+      #"chmod +x ~/config_init.sh",
+      #"sudo ~/config_init.sh",
+      "wget https://raw.githubusercontent.com/yusukeyurameshi/usage_reports_to_dbcs/master/Usage-Report/setup/setup_packages.sh",
+      "chmod +x ~/setup_packages.sh",
+      "~/setup_packages.sh",
       "wget https://objectstorage.sa-saopaulo-1.oraclecloud.com/n/oraclemetodista/b/Apex2/o/files_tomcat.zip",
     ]
   }

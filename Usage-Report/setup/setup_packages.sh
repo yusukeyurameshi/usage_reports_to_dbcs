@@ -11,6 +11,20 @@
 #
 #########################################################################################################################
 
+
+### 1. Install and setup Java
+sudo yum install -y java
+ 
+# Set profile for java
+sudo echo "export JAVA_HOME=$(readlink -e $(which java)|sed 's:/bin/java::')" >  /etc/profile.d/java.sh
+sudo echo "PATH=\$PATH:\$JAVA_HOME/bin"                                       >> /etc/profile.d/java.sh
+sudo source /etc/profile.d/java.sh
+
+### 2. Install some packages
+sudo yum install -y expect nkf screen
+
+
+
 export APPDIR=/home/opc/usage_reports_to_adw
 export CREDFILE=$APPDIR/config.user
 export LOG=/home/opc/setup_packages.log
